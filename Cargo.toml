@@ -1,0 +1,7 @@
+[package]
+name = "hammy"
+version = "0.1.0"
+authors = ["Seth Stadick <seth_stadick@bio-rad.com>"]
+edition = "2018"
+
+[dependencies]
