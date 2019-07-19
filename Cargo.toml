@@ -5,3 +5,10 @@ authors = ["Seth Stadick <seth_stadick@bio-rad.com>"]
 edition = "2018"
 
 [dependencies]
+
+[dev-dependencies]
+criterion = "0.2"
+
+[[bench]]
+name = "my_benchmark"
+harness = false
