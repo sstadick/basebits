@@ -4,8 +4,8 @@ extern crate criterion;
 use criterion::Criterion;
 use criterion::black_box;
 
-extern crate hammy;
-use hammy::{hamming, base_bits::*};
+extern crate basebits;
+use basebits::{hamming, base_bits::*};
 
 fn criterion_benchmark(c: &mut Criterion) {
     let alpha = BaseBits::new("ACTGACTGACTG");
@@ -30,6 +30,10 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("BaseBits with encoding",
                      |b| b.iter(||
                       hamming_dist(&BaseBits::new("ACTGACTGACTG"), &BaseBits::new("ACTGGGGGACTG"))));
+    c.bench_function("Encoding Cost",
+                     |b| b.iter(||
+                      black_box(BaseBits::new("ACTGACTGACTG"))));
+
 }
 
 criterion_group!(benches, criterion_benchmark);

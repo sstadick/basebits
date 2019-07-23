@@ -1,7 +1,7 @@
 [package]
-name = "hammy"
+name = "basebits"
 version = "0.1.0"
-authors = ["Seth Stadick <seth_stadick@bio-rad.com>"]
+authors = ["Seth Stadick <sstadick@gmail.com>"]
 edition = "2018"
 
 [dependencies]

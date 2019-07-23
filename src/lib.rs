@@ -18,7 +18,6 @@ mod tests {
     #[test]
     fn test_encoding() {
         let bb = BaseBits::new("ACTG");
-        println!("{:b}", bb.code);
         assert_eq!(bb.code, 0b000110101011);
     }
 }
@@ -63,20 +62,13 @@ pub mod base_bits {
         }
     }
 
-    //impl std::ops::BitXor for &BaseBits {
-        //type Output = u64;
-
-        //fn bitxor(self, rhs: Self) -> Self::Output {
-            //self.code ^ rhs.code
-        //}
-    //}
-
     #[inline]
     pub fn hamming_dist(alpha: &BaseBits, beta: &BaseBits) -> u32 {
         (alpha.code ^ beta.code).count_ones() / 2
     }
 }
 
+// Hamming distance functions that don't depend on BaseBits types
 pub mod hamming {
     #[inline]
     pub fn hamming_code(alpha: u64, beta: u64) -> u32 {
