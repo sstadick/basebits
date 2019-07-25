@@ -5,7 +5,7 @@ use criterion::Criterion;
 use criterion::black_box;
 
 extern crate basebits;
-use basebits::{hamming, base_bits::*};
+use basebits::*;
 
 fn criterion_benchmark(c: &mut Criterion) {
     let alpha = BaseBits::new("ACTGACTGACTG").unwrap();

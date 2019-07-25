@@ -2,6 +2,12 @@
 
 A library for memory efficient short DNA sequence encoding.
 
+## Synopsis
+
+When to use this library? 
+If you are comparing strings against each other more than 4 times, it
+becomes more efficient to pay the cost of encoding them. 
+
 ## Operations
 
 Constant time hamming distance calculations
