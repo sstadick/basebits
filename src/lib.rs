@@ -3,7 +3,7 @@ mod tests {
     use super::hamming::*;
     use super::base_bits::*;
     #[test]
-    fn test_hamming_dist() {
+    fn test_hamming_str_dist() {
         assert_eq!(hamming_str("ACTG", "ACTT"), 1);
         assert_eq!(hamming_str("ACTG", "ACTTT"), 1);
     }
@@ -16,6 +16,31 @@ mod tests {
     }
 
     #[test]
+    fn test_cases_bb_hamming() {
+        // Test N encoding
+        assert_eq!(hamming_dist(&BaseBits::new("ACTN"), &BaseBits::new("ACTG")), 1);
+        // Test * encoding
+        assert_eq!(hamming_dist(&BaseBits::new("ACT*"), &BaseBits::new("ACTG")), 0);
+        // Test that unkown chars treated like Ns
+        assert_eq!(hamming_dist(&BaseBits::new("ACT9"), &BaseBits::new("ACTG")), 1);
+        // Test regular equality
+        assert_eq!(hamming_dist(&BaseBits::new("ACTG"), &BaseBits::new("ACTG")), 0);
+
+        // Test Other string
+        assert_eq!(hamming_dist(&BaseBits::new("GATACA"), &BaseBits::new("GATACT")), 1);
+    }
+
+    #[test]
+    fn test_bb_to_string() {
+        let alpha = BaseBits::new("GCTAN");
+        let beta = BaseBits::new("ACTG*");
+        println!("Alpha: {}", alpha);
+        println!("Beta: {}", beta);
+        assert_eq!(alpha.to_string(), "GCTAN".to_string());
+        assert_eq!(beta.to_string(), "ACTG*".to_string());
+    }
+
+    #[test]
     fn test_encoding() {
         let bb = BaseBits::new("ACTG");
         assert_eq!(bb.code, 0b000110101011);
@@ -25,6 +50,8 @@ mod tests {
 /// Encode a DNA string of up to 21 bases as a u64 for fast hamming distance calculations.
 /// TODO: Add a bump to use u128 or maybe bigint if 21 chars is not enough. 
 pub mod base_bits {
+    use std::fmt;
+
     pub const ENCODING_DIST: u32 = 2;
     pub const ENCODING_LENGTH: u32 = 3;
     pub const UNDETERMINED: u64 = 0b100;
@@ -42,12 +69,14 @@ pub mod base_bits {
   
     //#[derive(Copy, Clone)]
     pub struct BaseBits {
-        pub code: u64
+        pub code: u64,
+        len: usize
     }
 
     impl BaseBits {
         pub fn new(seq: &str)-> BaseBits {
             let mut code: u64 = 0;
+            let len = seq.len();
             for c in seq.chars() {
                 code = (code << ENCODING_LENGTH) | match c {
                     'A' => Bases::A,
@@ -55,16 +84,59 @@ pub mod base_bits {
                     'T' => Bases::T,
                     'G' => Bases::G,
                     'N' => Bases::N,
-                     _ => Bases::STAR,
+                    '*' => Bases::STAR,
+                     _ => Bases::N,
                 }
             }
-            BaseBits{code}
+            BaseBits{code, len}
+        }
+
+        fn decode(&self) -> String {
+            // firgure out how to pop off ENCODING_Length bits at a time
+            // and decode those bits... 
+            let mut s = String::from("");
+            let mut code = self.code;
+            println!("Code: {:#b}", code);
+            for _ in 0..self.len {
+                let base = extract_bits(code, ENCODING_LENGTH);
+                println!("Base: {:#b}", base);
+                code = code >> ENCODING_LENGTH;
+                println!("Code: {:#b}", code);
+                s.push(match base {
+                    Bases::A => 'A',
+                    Bases::C => 'C',
+                    Bases::T => 'T',
+                    Bases::G => 'G',
+                    Bases::N => 'N',
+                    Bases::STAR => '*',
+                    _ => 'N'
+                });
+            }
+            s.chars().rev().collect()
+        }
+    }
+
+    impl fmt::Display for BaseBits {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "{}", self.decode())
         }
     }
 
     #[inline]
     pub fn hamming_dist(alpha: &BaseBits, beta: &BaseBits) -> u32 {
         (alpha.code ^ beta.code).count_ones() / 2
+    }
+
+    // Util functions
+    /// Extract 'k' bits from the end of a u64 integer
+    #[inline]
+    fn extract_bits(n: u64, k: u32) -> u64 {
+        let mut extractor: u64 = 0;
+        for _ in 0..k {
+            extractor <<= 1;
+            extractor |= 1;
+        }
+        extractor & n 
     }
 }
 
