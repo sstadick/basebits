@@ -55,7 +55,6 @@ mod tests {
 }
 
 /// Encode a DNA string of up to 21 bases as a u64 for fast hamming distance calculations.
-/// TODO: insted of using &str, use &[u8] or at least think about it
 /// TODO: Add a bump to use u128 or maybe bigint if 21 chars is not enough. 
 /// TODO: Add equalities and hash function stuff so this type can be used in data structures
 use std::fmt;
