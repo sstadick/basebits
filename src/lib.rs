@@ -10,26 +10,26 @@ mod tests {
 
     #[test]
     fn test_base_bits() {
-        let alpha = BaseBits::new("ACTG").unwrap();
-        let beta = BaseBits::new("ACTT").unwrap();
+        let alpha = BaseBits::new(b"ACTG").unwrap();
+        let beta = BaseBits::new(b"ACTT").unwrap();
         assert_eq!(hamming_dist(&alpha, &beta), 1);
     }
 
     #[test]
     fn test_cases_bb_hamming() {
         // Test N encoding
-        assert_eq!(hamming_dist(&BaseBits::new("ACTN").unwrap(), &BaseBits::new("ACTG").unwrap()), 1);
+        assert_eq!(hamming_dist(&BaseBits::new(b"ACTN").unwrap(), &BaseBits::new(b"ACTG").unwrap()), 1);
         // Test * encoding
-        assert_eq!(hamming_dist(&BaseBits::new("ACT*").unwrap(), &BaseBits::new("ACTG").unwrap()), 0);
+        assert_eq!(hamming_dist(&BaseBits::new(b"ACT*").unwrap(), &BaseBits::new(b"ACTG").unwrap()), 0);
         // Test that unkown chars treated like Ns
-        assert_eq!(hamming_dist(&BaseBits::new("ACT9").unwrap(), &BaseBits::new("ACTG").unwrap()), 1);
+        assert_eq!(hamming_dist(&BaseBits::new(b"ACT9").unwrap(), &BaseBits::new(b"ACTG").unwrap()), 1);
         // Test regular equality
-        assert_eq!(hamming_dist(&BaseBits::new("ACTG").unwrap(), &BaseBits::new("ACTG").unwrap()), 0);
+        assert_eq!(hamming_dist(&BaseBits::new(b"ACTG").unwrap(), &BaseBits::new(b"ACTG").unwrap()), 0);
 
         // Test Other string
-        assert_eq!(hamming_dist(&BaseBits::new("GATACA").unwrap(), &BaseBits::new("GATACT").unwrap()), 1);
-        assert_eq!(hamming_dist(&BaseBits::new("CATACAGATACTTCCATAGCT").unwrap(),
-                                &BaseBits::new("GATACAGATACTTCCATAGCA").unwrap()), 2);
+        assert_eq!(hamming_dist(&BaseBits::new(b"GATACA").unwrap(), &BaseBits::new(b"GATACT").unwrap()), 1);
+        assert_eq!(hamming_dist(&BaseBits::new(b"CATACAGATACTTCCATAGCT").unwrap(),
+                                &BaseBits::new(b"GATACAGATACTTCCATAGCA").unwrap()), 2);
         // This one should fail since it overflows and wraps around. needs thought
         //assert_eq!(hamming_dist(&BaseBits::new("TATACAGATACTTCCATAGCATC"),
                                 //&BaseBits::new("GATACAGATACAACNATAGCATT")), 4);
@@ -37,27 +37,29 @@ mod tests {
 
     #[test]
     fn test_bb_to_string() {
-        let alpha = BaseBits::new("GCTAN").unwrap();
-        let beta = BaseBits::new("ACTG*").unwrap();
+        let alpha = BaseBits::new(b"GCTAN").unwrap();
+        let beta = BaseBits::new(b"ACTG*").unwrap();
         assert_eq!(alpha.to_string(), "GCTAN".to_string());
         assert_eq!(beta.to_string(), "ACTG*".to_string());
 
 
-        let long = BaseBits::new("GATACAGATACAACNATAGCA").unwrap();
+        let long = BaseBits::new(b"GATACAGATACAACNATAGCA").unwrap();
         assert_eq!(long.to_string(), "GATACAGATACAACNATAGCA".to_string());
     }
 
     #[test]
     fn test_encoding() {
-        let bb = BaseBits::new("ACTG").unwrap();
+        let bb = BaseBits::new(b"ACTG").unwrap();
         assert_eq!(bb.code, 0b000110101011);
     }
 }
 
 /// Encode a DNA string of up to 21 bases as a u64 for fast hamming distance calculations.
+/// TODO: insted of using &str, use &[u8] or at least think about it
 /// TODO: Add a bump to use u128 or maybe bigint if 21 chars is not enough. 
 /// TODO: Add equalities and hash function stuff so this type can be used in data structures
 use std::fmt;
+use std::str;
 
 pub const ENCODING_DIST: u32 = 2;
 pub const ENCODING_LENGTH: u32 = 3;
@@ -77,55 +79,56 @@ impl Bases {
 }
 
 //#[derive(Copy, Clone)]
+#[derive(Hash, PartialEq, Eq, Debug)]
 pub struct BaseBits {
     pub code: u64,
     len: usize
 }
 
 impl BaseBits {
-    pub fn new(seq: &str)-> Result<BaseBits, &'static str> {
+    pub fn new(seq: &[u8])-> Result<BaseBits, &'static str> {
         let mut code: u64 = 0;
         let len = seq.len();
         if len > MAX_BASES {
             return Err("Length of string to encode exceeds MAX_BASES");
         }
-        for c in seq.chars() {
+        for c in seq.iter() {
             code = (code << ENCODING_LENGTH) | match c {
-                'A' => Bases::A,
-                'C' => Bases::C,
-                'T' => Bases::T,
-                'G' => Bases::G,
-                'N' => Bases::N,
-                '*' => Bases::STAR,
+                b'A' => Bases::A,
+                b'C' => Bases::C,
+                b'T' => Bases::T,
+                b'G' => Bases::G,
+                b'N' => Bases::N,
+                b'*' => Bases::STAR,
                  _ => Bases::N,
             }
         }
         Ok(BaseBits{code, len})
     }
 
-    fn decode(&self) -> String {
-        let mut s = String::from("");
+    fn decode(&self) -> Vec<u8> {
+        let mut s = Vec::new();
         let mut code = self.code;
         for _ in 0..self.len {
             let base = extract_bits(code, ENCODING_LENGTH);
             code = code >> ENCODING_LENGTH;
             s.push(match base {
-                Bases::A => 'A',
-                Bases::C => 'C',
-                Bases::T => 'T',
-                Bases::G => 'G',
-                Bases::N => 'N',
-                Bases::STAR => '*',
-                _ => 'N'
+                Bases::A => b'A',
+                Bases::C => b'C',
+                Bases::T => b'T',
+                Bases::G => b'G',
+                Bases::N => b'N',
+                Bases::STAR => b'*',
+                _ => b'N'
             });
         }
-        s.chars().rev().collect()
+        s.into_iter().rev().collect()
     }
 }
 
 impl fmt::Display for BaseBits {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.decode())
+        write!(f, "{}", str::from_utf8(&self.decode()).unwrap())
     }
 }
 
