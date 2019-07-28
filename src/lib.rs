@@ -59,6 +59,7 @@ mod tests {
 /// TODO: Add equalities and hash function stuff so this type can be used in data structures
 use std::fmt;
 use std::str;
+use std::u64;
 
 pub const ENCODING_DIST: u32 = 2;
 pub const ENCODING_LENGTH: u32 = 3;
@@ -66,6 +67,7 @@ pub const CONTAINER_WIDTH: u32 = 64;
 pub const MAX_BASES: usize = (CONTAINER_WIDTH / ENCODING_LENGTH) as usize;
 pub const UNDETERMINED: u64 = 0b100;
 pub const ANY: u64 = 0b111;
+pub const MAX_VAL: u64 = u64::MAX;
 
 struct Bases;
 impl Bases {
@@ -78,10 +80,10 @@ impl Bases {
 }
 
 //#[derive(Copy, Clone)]
-#[derive(Hash, PartialEq, Eq, Debug)]
+#[derive(Hash, PartialEq, Eq, Debug, Copy, Clone)]
 pub struct BaseBits {
     pub code: u64,
-    len: usize
+    len: usize,
 }
 
 impl BaseBits {
@@ -105,7 +107,7 @@ impl BaseBits {
         Ok(BaseBits{code, len})
     }
 
-    fn decode(&self) -> Vec<u8> {
+    pub fn decode(&self) -> Vec<u8> {
         let mut s = Vec::new();
         let mut code = self.code;
         for _ in 0..self.len {
