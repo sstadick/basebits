@@ -1,11 +1,12 @@
 [package]
 name = "basebits"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Seth Stadick <sstadick@gmail.com>"]
 edition = "2018"
 license = "mit"
 license-file = "LICENSE"
 repository = "https://github.com/sstadick/basebits"
+description = "A library for encoding DNA into u64 to allow for constant time hamming distance calculations."
 
 [dependencies]
 
