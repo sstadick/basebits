@@ -3,6 +3,9 @@ name = "basebits"
 version = "0.1.0"
 authors = ["Seth Stadick <sstadick@gmail.com>"]
 edition = "2018"
+license = "mit"
+license-file = "LICENSE"
+repository = "https://github.com/sstadick/basebits"
 
 [dependencies]
 
@@ -10,5 +13,5 @@ edition = "2018"
 criterion = "0.2"
 
 [[bench]]
-name = "my_benchmark"
+name = "bench_basebits"
 harness = false
