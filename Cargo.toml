@@ -7,6 +7,8 @@ license = "MIT"
 license-file = "LICENSE"
 repository = "https://github.com/sstadick/basebits"
 description = "A library for encoding DNA into u64 to allow for constant time hamming distance calculations."
+documentation = "https://docs.rs/basebits/0.2.0/basebits/"
+readme = "README.md"
 
 [dependencies]
 
