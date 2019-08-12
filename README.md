@@ -1,4 +1,6 @@
 ![docs](https://docs.rs/basebits/badge.svg)
+![crates.io](https://img.shields.io/crates/v/basebits.svg)
+
 
 # basebits
 
