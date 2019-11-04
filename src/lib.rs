@@ -23,17 +23,17 @@ mod tests {
                 &BaseBits::new(b"ACTN").unwrap(),
                 &BaseBits::new(b"ACTG").unwrap()
             ),
-            0
+            1
         );
         // Test * encoding
         assert_eq!(
             hamming_dist(
-                &BaseBits::new(b"ACT*").unwrap(),
+                &BaseBits::new(b"*CTG").unwrap(),
                 &BaseBits::new(b"ACTG").unwrap()
             ),
             0
         );
-        // Test that UNDETERMINED encoding
+        // Test that unkown chars treated like Ns
         assert_eq!(
             hamming_dist(
                 &BaseBits::new(b"ACT9").unwrap(),
@@ -75,7 +75,7 @@ mod tests {
         let alpha = BaseBits::new(b"GCTAN").unwrap();
         let beta = BaseBits::new(b"ACTG*").unwrap();
         assert_eq!(alpha.to_string(), "GCTAN".to_string());
-        assert_eq!(beta.to_string(), "ACTGN".to_string());
+        assert_eq!(beta.to_string(), "ACTG*".to_string());
 
         let long = BaseBits::new(b"GATACAGATACAACNATAGCA").unwrap();
         assert_eq!(long.to_string(), "GATACAGATACAACNATAGCA".to_string());
@@ -109,9 +109,8 @@ impl Bases {
     const C: u64 = 0b110;
     const T: u64 = 0b101;
     const G: u64 = 0b011;
-    const N: u64 = ANY;
+    const N: u64 = UNDETERMINED;
     const STAR: u64 = ANY;
-    const UNDETERMINED: u64 = UNDETERMINED;
 }
 
 //#[derive(Copy, Clone)]
@@ -137,13 +136,12 @@ impl BaseBits {
                     b'G' => Bases::G,
                     b'N' => Bases::N,
                     b'*' => Bases::STAR,
-                    _ => Bases::UNDETERMINED,
+                    _ => Bases::N,
                 }
         }
         Ok(BaseBits { code, len })
     }
 
-    //#[allow(unreachable_patterns)]
     pub fn decode(&self) -> Vec<u8> {
         let mut s = Vec::new();
         let mut code = self.code;
@@ -155,10 +153,9 @@ impl BaseBits {
                 Bases::C => b'C',
                 Bases::T => b'T',
                 Bases::G => b'G',
+                Bases::N => b'N',
+                Bases::STAR => b'*',
                 _ => b'N',
-                //Bases::N => b'N',
-                //Bases::STAR => b'*', // As long as N and STAR are ANY, STAR is unreachable
-                //_ => b'N',
             });
         }
         s.into_iter().rev().collect()
@@ -173,7 +170,7 @@ impl fmt::Display for BaseBits {
 
 #[inline]
 pub fn hamming_dist(alpha: &BaseBits, beta: &BaseBits) -> u32 {
-    (alpha.code ^ beta.code).count_ones() / 2
+    (alpha.code ^ beta.code).count_ones() / ENCODING_DIST
 }
 
 /// Extract 'k' bits from the end of a u64 integer
