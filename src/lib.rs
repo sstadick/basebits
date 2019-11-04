@@ -26,13 +26,13 @@ mod tests {
             1
         );
         // Test * encoding
-        assert_eq!(
-            hamming_dist(
-                &BaseBits::new(b"*CTG").unwrap(),
-                &BaseBits::new(b"ACTG").unwrap()
-            ),
-            0
-        );
+        //assert_eq!(
+        //hamming_dist(
+        //&BaseBits::new(b"*CTG").unwrap(),
+        //&BaseBits::new(b"ACTG").unwrap()
+        //),
+        //0
+        //);
         // Test that unkown chars treated like Ns
         assert_eq!(
             hamming_dist(
@@ -73,9 +73,9 @@ mod tests {
     #[test]
     fn test_bb_to_string() {
         let alpha = BaseBits::new(b"GCTAN").unwrap();
-        let beta = BaseBits::new(b"ACTG*").unwrap();
+        let beta = BaseBits::new(b"ACTGN").unwrap();
         assert_eq!(alpha.to_string(), "GCTAN".to_string());
-        assert_eq!(beta.to_string(), "ACTG*".to_string());
+        assert_eq!(beta.to_string(), "ACTGN".to_string());
 
         let long = BaseBits::new(b"GATACAGATACAACNATAGCA").unwrap();
         assert_eq!(long.to_string(), "GATACAGATACAACNATAGCA".to_string());
@@ -100,7 +100,7 @@ pub const ENCODING_LENGTH: u32 = 3;
 pub const CONTAINER_WIDTH: u32 = 64;
 pub const MAX_BASES: usize = (CONTAINER_WIDTH / ENCODING_LENGTH) as usize;
 pub const UNDETERMINED: u64 = 0b100;
-pub const ANY: u64 = 0b111;
+//pub const ANY: u64 = 0b111;
 pub const MAX_VAL: u64 = u64::MAX;
 
 struct Bases;
@@ -110,7 +110,7 @@ impl Bases {
     const T: u64 = 0b101;
     const G: u64 = 0b011;
     const N: u64 = UNDETERMINED;
-    const STAR: u64 = ANY;
+    //const STAR: u64 = ANY;
 }
 
 //#[derive(Copy, Clone)]
@@ -135,7 +135,7 @@ impl BaseBits {
                     b'T' => Bases::T,
                     b'G' => Bases::G,
                     b'N' => Bases::N,
-                    b'*' => Bases::STAR,
+                    //b'*' => Bases::STAR,
                     _ => Bases::N,
                 }
         }
@@ -154,7 +154,7 @@ impl BaseBits {
                 Bases::T => b'T',
                 Bases::G => b'G',
                 Bases::N => b'N',
-                Bases::STAR => b'*',
+                //Bases::STAR => b'*',
                 _ => b'N',
             });
         }
