@@ -18,21 +18,56 @@ mod tests {
     #[test]
     fn test_cases_bb_hamming() {
         // Test N encoding
-        assert_eq!(hamming_dist(&BaseBits::new(b"ACTN").unwrap(), &BaseBits::new(b"ACTG").unwrap()), 1);
+        assert_eq!(
+            hamming_dist(
+                &BaseBits::new(b"ACTN").unwrap(),
+                &BaseBits::new(b"ACTG").unwrap()
+            ),
+            0
+        );
         // Test * encoding
-        assert_eq!(hamming_dist(&BaseBits::new(b"ACT*").unwrap(), &BaseBits::new(b"ACTG").unwrap()), 0);
-        // Test that unkown chars treated like Ns
-        assert_eq!(hamming_dist(&BaseBits::new(b"ACT9").unwrap(), &BaseBits::new(b"ACTG").unwrap()), 1);
+        assert_eq!(
+            hamming_dist(
+                &BaseBits::new(b"ACT*").unwrap(),
+                &BaseBits::new(b"ACTG").unwrap()
+            ),
+            0
+        );
+        // Test that UNDETERMINED encoding
+        assert_eq!(
+            hamming_dist(
+                &BaseBits::new(b"ACT9").unwrap(),
+                &BaseBits::new(b"ACTG").unwrap()
+            ),
+            1
+        );
         // Test regular equality
-        assert_eq!(hamming_dist(&BaseBits::new(b"ACTG").unwrap(), &BaseBits::new(b"ACTG").unwrap()), 0);
+        assert_eq!(
+            hamming_dist(
+                &BaseBits::new(b"ACTG").unwrap(),
+                &BaseBits::new(b"ACTG").unwrap()
+            ),
+            0
+        );
 
         // Test Other string
-        assert_eq!(hamming_dist(&BaseBits::new(b"GATACA").unwrap(), &BaseBits::new(b"GATACT").unwrap()), 1);
-        assert_eq!(hamming_dist(&BaseBits::new(b"CATACAGATACTTCCATAGCT").unwrap(),
-                                &BaseBits::new(b"GATACAGATACTTCCATAGCA").unwrap()), 2);
+        assert_eq!(
+            hamming_dist(
+                &BaseBits::new(b"GATACA").unwrap(),
+                &BaseBits::new(b"GATACT").unwrap()
+            ),
+            1
+        );
+        assert_eq!(
+            hamming_dist(
+                &BaseBits::new(b"CATACAGATACTTCCATAGCT").unwrap(),
+                &BaseBits::new(b"GATACAGATACTTCCATAGCA").unwrap()
+            ),
+            2
+        );
         // This one should fail since it overflows and wraps around. needs thought
         //assert_eq!(hamming_dist(&BaseBits::new("TATACAGATACTTCCATAGCATC"),
-                                //&BaseBits::new("GATACAGATACAACNATAGCATT")), 4);
+        //&BaseBits::new("GATACAGATACAACNATAGCATT")), 4);
     }
 
     #[test]
@@ -40,8 +75,7 @@ mod tests {
         let alpha = BaseBits::new(b"GCTAN").unwrap();
         let beta = BaseBits::new(b"ACTG*").unwrap();
         assert_eq!(alpha.to_string(), "GCTAN".to_string());
-        assert_eq!(beta.to_string(), "ACTG*".to_string());
-
+        assert_eq!(beta.to_string(), "ACTGN".to_string());
 
         let long = BaseBits::new(b"GATACAGATACAACNATAGCA").unwrap();
         assert_eq!(long.to_string(), "GATACAGATACAACNATAGCA".to_string());
@@ -55,7 +89,7 @@ mod tests {
 }
 
 /// Encode a DNA string of up to 21 bases as a u64 for fast hamming distance calculations.
-/// TODO: Add a bump to use u128 or maybe bigint if 21 chars is not enough. 
+/// TODO: Add a bump to use u128 or maybe bigint if 21 chars is not enough.
 /// TODO: Add equalities and hash function stuff so this type can be used in data structures
 use std::fmt;
 use std::str;
@@ -75,8 +109,9 @@ impl Bases {
     const C: u64 = 0b110;
     const T: u64 = 0b101;
     const G: u64 = 0b011;
-    const N: u64 = UNDETERMINED;
+    const N: u64 = ANY;
     const STAR: u64 = ANY;
+    const UNDETERMINED: u64 = UNDETERMINED;
 }
 
 //#[derive(Copy, Clone)]
@@ -87,26 +122,28 @@ pub struct BaseBits {
 }
 
 impl BaseBits {
-    pub fn new(seq: &[u8])-> Result<BaseBits, &'static str> {
+    pub fn new(seq: &[u8]) -> Result<BaseBits, &'static str> {
         let mut code: u64 = 0;
         let len = seq.len();
         if len > MAX_BASES {
             return Err("Length of string to encode exceeds MAX_BASES");
         }
         for c in seq.iter() {
-            code = (code << ENCODING_LENGTH) | match c {
-                b'A' => Bases::A,
-                b'C' => Bases::C,
-                b'T' => Bases::T,
-                b'G' => Bases::G,
-                b'N' => Bases::N,
-                b'*' => Bases::STAR,
-                 _ => Bases::N,
-            }
+            code = (code << ENCODING_LENGTH)
+                | match c {
+                    b'A' => Bases::A,
+                    b'C' => Bases::C,
+                    b'T' => Bases::T,
+                    b'G' => Bases::G,
+                    b'N' => Bases::N,
+                    b'*' => Bases::STAR,
+                    _ => Bases::UNDETERMINED,
+                }
         }
-        Ok(BaseBits{code, len})
+        Ok(BaseBits { code, len })
     }
 
+    //#[allow(unreachable_patterns)]
     pub fn decode(&self) -> Vec<u8> {
         let mut s = Vec::new();
         let mut code = self.code;
@@ -118,9 +155,10 @@ impl BaseBits {
                 Bases::C => b'C',
                 Bases::T => b'T',
                 Bases::G => b'G',
-                Bases::N => b'N',
-                Bases::STAR => b'*',
-                _ => b'N'
+                _ => b'N',
+                //Bases::N => b'N',
+                //Bases::STAR => b'*', // As long as N and STAR are ANY, STAR is unreachable
+                //_ => b'N',
             });
         }
         s.into_iter().rev().collect()
@@ -144,7 +182,6 @@ fn extract_bits(n: u64, k: u32) -> u64 {
     !(!0u64 << k) & n
 }
 
-
 // Hamming distance functions that don't depend on BaseBits types
 pub mod hamming {
     #[inline]
@@ -165,7 +202,6 @@ pub mod hamming {
         dist
     }
 }
-
 
 // dist (pop_count in the paper)
 // https://github.com/Daniel-Liu-c0deb0t/UMICollapse/blob/master/src/umicollapse/util/Read.java
